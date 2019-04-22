@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -13,7 +15,7 @@ import (
 )
 
 // AllRules : internal struct of the rules yaml file
-type AllRules struct {
+type allRules struct {
 	Rules []struct {
 		Name        string   `yaml:"name"`
 		Description string   `yaml:"description"`
@@ -24,15 +26,24 @@ type AllRules struct {
 	} `yaml:"Rules"`
 }
 
+// OpaOutput : opa output schema
+type opaOutput struct {
+	Nonprod      int  `json:"Nonprod"`
+	Nonprodfatal bool `json:"Nonprodfatal"`
+	Prod         int  `json:"Prod"`
+	Prodfatal    bool `json:"Prodfatal"`
+}
+
 var (
-	rules *AllRules
+	rules     *allRules
+	opaReport *opaOutput
 )
 
-func getConfStruct() *AllRules {
+func getRuleStruct() *allRules {
 
 	err := viper.Unmarshal(&rules)
 	if err != nil {
-		fmt.Printf("unable to decode into config struct, %v", err)
+		fmt.Printf("| Unable to decode into rule config struct, %v", err)
 	}
 	return rules
 
@@ -45,25 +56,32 @@ var auditCmd = &cobra.Command{
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		rules = getConfStruct()
+		opaReport := opaOutput{
+			Nonprod:      0,
+			Nonprodfatal: false,
+			Prod:         0,
+			Prodfatal:    false,
+		}
+
+		rules = getRuleStruct()
 
 		rgbin := "rg"
-
 		path, err := exec.LookPath("rg")
 
 		if err != nil {
 
-			if runtime.GOOS == "windows" {
+			switch runtime.GOOS {
+			case "windows":
 				rgbin = "rg/rg.exe"
-			}
-			if runtime.GOOS == "darwin" {
+			case "darwin":
 				rgbin = "rg/rgm"
-			}
-			if runtime.GOOS == "linux" {
+			case "linux":
 				rgbin = "rg/rgl"
+			default:
+				log.Fatalln("| OS not supported")
 			}
 
-			fmt.Println("| rg not available in PATH, using local binary")
+			fmt.Println("| ripgrep not available in PATH, using local binary")
 
 		}
 
@@ -74,6 +92,7 @@ var auditCmd = &cobra.Command{
 			fmt.Println("|")
 			ffmt.Puts(rules)
 			fmt.Println("|")
+
 		}
 
 		for index, value := range rules.Rules {
@@ -102,24 +121,40 @@ var auditCmd = &cobra.Command{
 					} else {
 						fmt.Println("| Clean")
 					}
-
 				} else {
-					if value.Fatal && value.Environment == "prod" {
-						fmt.Println("|")
-						fmt.Println("| This violation is fatal for non-prod environments")
-					}
-					if value.Fatal && value.Environment == "non-prod" {
-						fmt.Println("|")
-						fmt.Println("| This violation blocks your code promotion between environments")
+					if value.Environment == "non-prod" {
+						opaReport.Nonprod++
+						if value.Fatal {
+							fmt.Println("|")
+							fmt.Println("| This violation blocks your code promotion between environments")
+							opaReport.Nonprodfatal = true
+
+						}
+					} else {
+						opaReport.Prod++
+						if value.Fatal {
+							fmt.Println("|")
+							fmt.Println("| This violation is fatal for prod environments")
+							opaReport.Prodfatal = true
+						}
 					}
 					fmt.Println("|")
 					fmt.Println("||", value.Name)
 					fmt.Println("|| Solution : ", value.Solution)
 					fmt.Println("|")
 				}
-
 			}
 		}
+
+		file, _ := json.MarshalIndent(opaReport, "", " ")
+		_ = ioutil.WriteFile("opa-report.json", file, 0644)
+
+		fmt.Println("|")
+		fmt.Println("|")
+		fmt.Println("| OPA REPORT")
+		ffmt.Puts(opaReport)
+		fmt.Println("|")
+		fmt.Println("| EXIT")
 
 	},
 }
