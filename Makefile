@@ -1,3 +1,8 @@
+
+MOMENT=$(shell date +'%Y%m%d-%H%M')
+VERSION=$(shell git rev-parse --short HEAD)
+RANDOM=$(shell awk 'BEGIN{srand();printf("%d", 65536*rand())}')
+
 all: clean windows linux macos out
 
 windows:
@@ -21,7 +26,7 @@ purge:
 	rm -f release.zip
 
 out:
-	rm -f release.zip
+	rm -f release*.zip
 	rm -f release/auditl
 	rm -f release/auditm
 	rm -f release/auditw.exe
@@ -29,6 +34,8 @@ out:
 	cp bin/auditm release/auditm
 	cp bin/auditw.exe release/auditw.exe
 	cp .ignore release/.ignore
-	rm -f release/.DS_Store
-	zip -9 -T -r release.zip release/
+	zip -9 -T -x "*.DS_Store*" -r release-$(VERSION)-$(MOMENT).zip release/ 
+
+
+
 
