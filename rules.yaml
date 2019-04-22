@@ -1,0 +1,56 @@
+Rules:
+  - name: Module source from git
+    description: Module is sourced from git - only available on NON PROD environments
+    solution: Source your modules from their latest version on artifactory
+    environment: prod
+    fatal: true
+    patterns:
+      - ^\s*.git"$
+
+  - name: Environment hardcoded ids on code or variables
+    description: Refrain from hardcoding resource ids per environment
+    solution: Capture them dynamically from data lookups or module outputs
+    environment: non-prod
+    fatal: false
+    patterns:
+      - (subnet_ids\s*=\s*\[\s*"\$\{v)
+      - (subnet_ids\s*=\s*\[\s*"[s])
+      - (subnet_ids\s*=\s*=\s*"\$\{v)
+      - (subnet_id\s*=\s*"\s*[s])
+      - (subnet_id\s*=\s*"\s*\$\{v)
+      - (subnets\s*=\s*\[\s*"\$\{v)
+      - (subnets\s*=\s*\[\s*"[s])
+      - (vpc_zone_identifier\s*=\s*\[\s*"\$\{v)
+      - (vpc_zone_identifier\s*=\s*\[\s*"[v])
+      - (vpc_zone_identifier\s*=\s*=\s*"\$\{v)
+      - (vpc_id\s*=\s*"\s*[v])
+      - (vpc_id\s*=\s*"\s*\$\{v)
+      - (aws_apps_ami\s*=\s*"\s*\$\{v)
+      - (aws_apps_ami\s*=\s*"\s*[a])
+      - (ami\s*=\s*"\s*\$\{v)
+      - (ami\s*=\s*"\s*[a])
+      - (image_id\s*=\s*"\s*\$\{v)
+      - (image_id\s*=\s*"\s*[a])
+      - (vpc_security_group_ids\s*=\s*\[\s*"\$\{v)
+      - (vpc_security_group_ids\s*=\s*\[\s*"[sg])
+      - (security_groups\s*=\s*\[\s*"\$\{v)
+      - (security_groups\s*=\s*\[\s*"[sg])
+      - ("subnet-)
+      - ("sg-)
+      - ("vpc-)
+
+  - name: Resource
+    description:
+    solution:
+    environment:
+    fatal: true
+    patterns:
+      - ^resource\s*"
+
+  - name: 0.0.0.0
+    description:
+    solution:
+    environment:
+    fatal: true
+    patterns:
+      - ("0\.0\.0\.0)
