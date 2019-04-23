@@ -20,16 +20,12 @@ clean:
 	rm -f bin/tcaut.exe
 	
 purge:
-	rm -f bin/tcautl
-	rm -f bin/tcautm
-	rm -f bin/tcaut.exe
-	rm -f tcaut-*.zip
-
-out:
-	rm -f release*.zip
 	rm -f release/tcautl
 	rm -f release/tcautm
 	rm -f release/tcaut.exe
+	rm -f tcaut-*.zip
+
+out: purge
 	cp bin/tcautl release/tcautl
 	cp bin/tcautm release/tcautm
 	cp bin/tcaut.exe release/tcaut.exe
@@ -37,8 +33,6 @@ out:
 	zip -9 -T -x "*.DS_Store*" -r tcaut-x-$(VERSION)-$(MOMENT).zip release/ 
 
 out-linux: clean purge
-	rm -f bin/tcautl
-	rm -f release/tcautl
 	GOOS=linux GOARCH=amd64 go build -o bin/tcautl
 	cp bin/tcautl release/tcautl
 	cp .ignore release/.ignore
