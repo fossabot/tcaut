@@ -1,0 +1,16 @@
+Rules:
+  - name: Another rule
+    description: Module is sourced from git - only available on NON PROD environments
+    solution: Source your modules from their latest version on artifactory
+    environment: prod
+    fatal: true
+    patterns:
+      - ^\s*.git"$
+
+  - name: extra rule
+    description:
+    solution:
+    environment:
+    fatal: true
+    patterns:
+      - ("0\.0\.0\.0)
