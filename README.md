@@ -1,0 +1,1 @@
+![takeout](tcaut.png)
