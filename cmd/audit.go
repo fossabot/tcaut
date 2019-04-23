@@ -115,10 +115,6 @@ var auditCmd = &cobra.Command{
 				errr := xcmd.Run()
 
 				if errr != nil {
-					if xcmd.ProcessState.ExitCode() == 1 {
-						fmt.Println("| Check executable permissions")
-						log.Fatal(errr)
-					}
 					if xcmd.ProcessState.ExitCode() == 2 {
 						fmt.Println("| Check regex pattern syntax")
 						log.Fatal(errr)
