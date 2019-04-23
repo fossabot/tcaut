@@ -6,35 +6,44 @@ RANDOM=$(shell awk 'BEGIN{srand();printf("%d", 65536*rand())}')
 all: clean windows linux macos out
 
 windows:
-	GOOS=windows GOARCH=amd64 go build -o bin/auditw.exe
+	GOOS=windows GOARCH=amd64 go build -o bin/tcaut.exe
 
 linux:
-	GOOS=linux GOARCH=amd64 go build -o bin/auditl
+	GOOS=linux GOARCH=amd64 go build -o bin/tcautl
 
 macos:
-	GOOS=darwin GOARCH=amd64 go build -o bin/auditm
+	GOOS=darwin GOARCH=amd64 go build -o bin/tcautm
 
 clean:
-	rm -f bin/auditl
-	rm -f bin/auditm
-	rm -f bin/auditw.exe
+	rm -f bin/tcautl
+	rm -f bin/tcautm
+	rm -f bin/tcaut.exe
 	
 purge:
-	rm -f bin/auditl
-	rm -f bin/auditm
-	rm -f bin/auditw.exe
-	rm -f release.zip
+	rm -f bin/tcautl
+	rm -f bin/tcautm
+	rm -f bin/tcaut.exe
+	rm -f tcaut-*.zip
 
 out:
 	rm -f release*.zip
-	rm -f release/auditl
-	rm -f release/auditm
-	rm -f release/auditw.exe
-	cp bin/auditl release/auditl
-	cp bin/auditm release/auditm
-	cp bin/auditw.exe release/auditw.exe
+	rm -f release/tcautl
+	rm -f release/tcautm
+	rm -f release/tcaut.exe
+	cp bin/tcautl release/tcautl
+	cp bin/tcautm release/tcautm
+	cp bin/tcaut.exe release/tcaut.exe
 	cp .ignore release/.ignore
-	zip -9 -T -x "*.DS_Store*" -r release-$(VERSION)-$(MOMENT).zip release/ 
+	zip -9 -T -x "*.DS_Store*" -r tcaut-x-$(VERSION)-$(MOMENT).zip release/ 
+
+out-linux: clean purge
+	rm -f bin/tcautl
+	rm -f release/tcautl
+	GOOS=linux GOARCH=amd64 go build -o bin/tcautl
+	cp bin/tcautl release/tcautl
+	cp .ignore release/.ignore
+	zip -9 -T -x "*.DS_Store*" "*.exe" "*rgm*" "*tcautm*" -r tcaut-linux-$(VERSION)-$(MOMENT).zip release/ 
+
 
 
 
