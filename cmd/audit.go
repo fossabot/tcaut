@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"runtime"
 
+	color "github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	ffmt "gopkg.in/ffmt.v1"
@@ -78,7 +79,7 @@ var auditCmd = &cobra.Command{
 			case "linux":
 				rgbin = "rg/rgl"
 			default:
-				log.Fatalln("| OS not supported")
+				log.Fatalln(color.Bold(color.Red("| OS not supported")))
 			}
 
 			fmt.Println("| ripgrep not available in PATH, using local binary")
@@ -116,17 +117,17 @@ var auditCmd = &cobra.Command{
 
 				if errr != nil {
 					if xcmd.ProcessState.ExitCode() == 2 {
-						fmt.Println("| Check regex pattern syntax")
+						fmt.Println(color.Bold(color.Red("| Check regex pattern syntax")))
 						log.Fatal(errr)
 					} else {
-						fmt.Println("| Clean")
+						fmt.Println(color.Bold(color.Green("| Clean")))
 					}
 				} else {
 					if value.Environment == "non-prod" {
 						opaReport.Nonprod++
 						if value.Fatal {
 							fmt.Println("|")
-							fmt.Println("| This violation blocks your code promotion between environments")
+							fmt.Println(color.Bold(color.Red("| This violation blocks your code promotion between environments")))
 							opaReport.Nonprodfatal = true
 
 						}
@@ -134,13 +135,13 @@ var auditCmd = &cobra.Command{
 						opaReport.Prod++
 						if value.Fatal {
 							fmt.Println("|")
-							fmt.Println("| This violation is fatal for prod environments")
+							fmt.Println(color.Bold(color.Red("| This violation is fatal for prod environments")))
 							opaReport.Prodfatal = true
 						}
 					}
 					fmt.Println("|")
-					fmt.Println("||", value.Name)
-					fmt.Println("|| Solution : ", value.Solution)
+					fmt.Println(color.Bold(color.Blue("||")), value.Name)
+					fmt.Println(color.Bold(color.Blue("|| Solution : ")), value.Solution)
 					fmt.Println("|")
 				}
 			}
@@ -151,7 +152,7 @@ var auditCmd = &cobra.Command{
 
 		fmt.Println("|")
 		fmt.Println("|")
-		fmt.Println("| OPA REPORT")
+		fmt.Println(color.Bold(color.Blue("| OPA REPORT")))
 		ffmt.Puts(opaReport)
 		fmt.Println("|")
 		fmt.Println("| EXIT")
