@@ -44,7 +44,7 @@ func getRuleStruct() *allRules {
 
 	err := viper.Unmarshal(&rules)
 	if err != nil {
-		fmt.Printf("| Unable to decode into rule config struct, %v", err)
+		fmt.Println(color.Bold(color.Red("| Unable to decode rule config struct : ")), err)
 	}
 	return rules
 
@@ -82,14 +82,13 @@ var auditCmd = &cobra.Command{
 				log.Fatalln(color.Bold(color.Red("| OS not supported")))
 			}
 
-			fmt.Println("| ripgrep not available in PATH, using local binary")
-
 		}
 
 		detail, _ := rootCmd.PersistentFlags().GetBool("detail")
+
 		if detail {
 
-			fmt.Printf("| rg is available at %s\n", path)
+			fmt.Println(path)
 			fmt.Println("|")
 			ffmt.Puts(rules)
 			fmt.Println("|")
@@ -117,7 +116,7 @@ var auditCmd = &cobra.Command{
 
 				if errr != nil {
 					if xcmd.ProcessState.ExitCode() == 2 {
-						fmt.Println(color.Bold(color.Red("| Check regex pattern syntax")))
+						fmt.Println(color.Bold(color.Red("| Error")))
 						log.Fatal(errr)
 					} else {
 						fmt.Println(color.Bold(color.Green("| Clean")))
@@ -126,7 +125,7 @@ var auditCmd = &cobra.Command{
 					if value.Environment == "non-prod" {
 						opaReport.Nonprod++
 						if value.Fatal {
-							fmt.Println("|")
+							fmt.Println(color.Bold(color.Red("|")))
 							fmt.Println(color.Bold(color.Red("| This violation blocks your code promotion between environments")))
 							opaReport.Nonprodfatal = true
 
@@ -134,7 +133,7 @@ var auditCmd = &cobra.Command{
 					} else {
 						opaReport.Prod++
 						if value.Fatal {
-							fmt.Println("|")
+							fmt.Println(color.Bold(color.Red("|")))
 							fmt.Println(color.Bold(color.Red("| This violation is fatal for prod environments")))
 							opaReport.Prodfatal = true
 						}
