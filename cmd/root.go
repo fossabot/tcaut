@@ -13,8 +13,8 @@ var scanpath string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "auditcli",
-	Short: "Code Auditor",
+	Use:   "tcaut",
+	Short: "TCAUT / Ripgrep for code auditing",
 	Long:  ``,
 }
 

@@ -5,7 +5,7 @@ Rules:
     environment: prod
     fatal: true
     patterns:
-      - ^\s*.git"$
+      - \s*.git"
 
   - name: Environment hardcoded ids on code or variables
     description: Refrain from hardcoding resource ids per environment
@@ -38,19 +38,3 @@ Rules:
       - ("subnet-)
       - ("sg-)
       - ("vpc-)
-
-  - name: Resource
-    description:
-    solution:
-    environment:
-    fatal: true
-    patterns:
-      - ^resource\s*"
-
-  - name: 0.0.0.0
-    description:
-    solution:
-    environment:
-    fatal: true
-    patterns:
-      - ("0\.0\.0\.0)
