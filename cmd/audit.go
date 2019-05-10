@@ -106,7 +106,7 @@ var auditCmd = &cobra.Command{
 				fmt.Println("| ----------")
 				fmt.Printf("| Rule #%d Pattern #%d : %s\n", index, pindex, pvalue)
 
-				codePattern := []string{"-p", "-i", "-C2", "-U", pvalue, scanpath}
+				codePattern := []string{"--pcre2", "-p", "-i", "-C2", "-U", pvalue, scanpath}
 				xcmd := exec.Command(rgbin, codePattern...)
 
 				xcmd.Stdout = os.Stdout

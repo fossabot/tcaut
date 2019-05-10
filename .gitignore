@@ -4,5 +4,5 @@ tcaut-*
 release/*
 bin/*
 tcaut-*
-opa-*
+opa*
 .vscode/*
