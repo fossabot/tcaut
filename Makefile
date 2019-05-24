@@ -19,6 +19,7 @@ macos: clean
 	GOOS=darwin GOARCH=amd64 go build -o bin/tcautm
 
 clean: mod
+	rm opa.json
 	rm -f bin/tcautl
 	rm -f bin/tcautm
 	rm -f bin/tcaut.exe

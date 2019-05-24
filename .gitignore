@@ -2,7 +2,9 @@
 release-*
 tcaut-*
 release/*
+test/*
 bin/*
 tcaut-*
 opa*
 .vscode/*
+search_regex

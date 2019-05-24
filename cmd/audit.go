@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 
 	color "github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
@@ -17,7 +18,8 @@ import (
 
 // AllRules : internal struct of the rules yaml file
 type allRules struct {
-	Rules []struct {
+	Banner string `yaml:"banner"`
+	Rules  []struct {
 		Name        string   `yaml:"name"`
 		Description string   `yaml:"description"`
 		Solution    string   `yaml:"solution"`
@@ -68,7 +70,6 @@ var auditCmd = &cobra.Command{
 
 		rgbin := "rg"
 		path, err := exec.LookPath("rg")
-
 		if err != nil {
 
 			switch runtime.GOOS {
@@ -81,8 +82,10 @@ var auditCmd = &cobra.Command{
 			default:
 				log.Fatalln(color.Bold(color.Red("| OS not supported")))
 			}
-
 		}
+		pwddir, _ := os.Getwd()
+
+		searchPatternFile := strings.Join([]string{pwddir, "/", "search_regex"}, "")
 
 		detail, _ := rootCmd.PersistentFlags().GetBool("detail")
 
@@ -94,61 +97,67 @@ var auditCmd = &cobra.Command{
 			fmt.Println("|")
 
 		}
+		fmt.Println("| ")
+		fmt.Println("| ")
+		fmt.Println(rules.Banner)
+		fmt.Println("| ")
 
 		for index, value := range rules.Rules {
 
 			fmt.Println("| ------------------------------------------------------------")
 			fmt.Println("| Rule #", index)
 			fmt.Println("| Rule name : ", value.Name)
+			fmt.Println("| ")
 
-			for pindex, pvalue := range value.Patterns {
+			searchPattern := []byte(strings.Join(value.Patterns, "\n") + "\n")
+			_ = ioutil.WriteFile(searchPatternFile, searchPattern, 0644)
 
-				fmt.Println("| ----------")
-				fmt.Printf("| Rule #%d Pattern #%d : %s\n", index, pindex, pvalue)
+			codePattern := []string{"--pcre2", "-p", "-i", "-C2", "-U", "-f", searchPatternFile, scanpath}
+			xcmd := exec.Command(rgbin, codePattern...)
+			xcmd.Stdout = os.Stdout
+			xcmd.Stderr = os.Stderr
 
-				codePattern := []string{"--pcre2", "-p", "-i", "-C2", "-U", pvalue, scanpath}
-				xcmd := exec.Command(rgbin, codePattern...)
+			errr := xcmd.Run()
 
-				xcmd.Stdout = os.Stdout
-				xcmd.Stderr = os.Stderr
+			if errr != nil {
+				if xcmd.ProcessState.ExitCode() == 2 {
+					fmt.Println(color.Bold(color.Red("| Error")))
+					log.Fatal(errr)
+				} else {
+					fmt.Println(color.Bold(color.Green("| Clean")))
+					fmt.Println("| ")
+				}
+			} else {
+				if value.Environment == "non-prod" {
+					opaReport.Nonprod++
+					if value.Fatal {
+						fmt.Println(color.Bold(color.Red("|")))
+						fmt.Println(color.Bold(color.Red("| This violation blocks your code promotion between environments")))
+						fmt.Println(color.Bold(color.Red("|")))
+						opaReport.Nonprodfatal = true
 
-				errr := xcmd.Run()
-
-				if errr != nil {
-					if xcmd.ProcessState.ExitCode() == 2 {
-						fmt.Println(color.Bold(color.Red("| Error")))
-						log.Fatal(errr)
-					} else {
-						fmt.Println(color.Bold(color.Green("| Clean")))
 					}
 				} else {
-					if value.Environment == "non-prod" {
-						opaReport.Nonprod++
-						if value.Fatal {
-							fmt.Println(color.Bold(color.Red("|")))
-							fmt.Println(color.Bold(color.Red("| This violation blocks your code promotion between environments")))
-							opaReport.Nonprodfatal = true
-
-						}
-					} else {
-						opaReport.Prod++
-						if value.Fatal {
-							fmt.Println(color.Bold(color.Red("|")))
-							fmt.Println(color.Bold(color.Red("| This violation is fatal for prod environments")))
-							opaReport.Prodfatal = true
-						}
+					opaReport.Prod++
+					if value.Fatal {
+						fmt.Println(color.Bold(color.Red("|")))
+						fmt.Println(color.Bold(color.Red("| This violation is fatal for production environments")))
+						fmt.Println(color.Bold(color.Red("|")))
+						opaReport.Prodfatal = true
 					}
-					fmt.Println("|")
-					fmt.Println(color.Bold(color.Blue("||")), value.Name)
-					fmt.Println(color.Bold(color.Blue("|| Target Environment : ")), value.Environment)
-					fmt.Println(color.Bold(color.Blue("|| Suggested Solution : ")), value.Solution)
-					fmt.Println("|")
 				}
+				fmt.Println(color.Bold(color.Blue("|")))
+				fmt.Println(color.Bold(color.Blue("|")), value.Name)
+				fmt.Println(color.Bold(color.Blue("| Target Environment : ")), value.Environment)
+				fmt.Println(color.Bold(color.Blue("| Suggested Solution : ")), value.Solution)
+				fmt.Println(color.Bold(color.Blue("|")))
 			}
+
 		}
 
 		file, _ := json.MarshalIndent(opaReport, "", " ")
 		_ = ioutil.WriteFile("opa.json", file, 0644)
+		_ = os.Remove(searchPatternFile)
 
 		fmt.Println("|")
 		fmt.Println("|")

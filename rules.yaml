@@ -1,8 +1,107 @@
+
+Banner: |
+
+    Terraform Code Audit - Policy as Code
+    More info at 
+    Report false positives to 
+    Latest policy file at
+    http://www.google.com
+
+    Empty line above this
+
 Rules:
   - name: NAME_TEXT
     description: DESCRIPTION_TEXT
-    solution: SOLUTION_TEXT
+    solution: SOLUTION_TEXT 
     environment: prod
     fatal: true
     patterns:
-      - ^((?!hede).)*$
+      - regex_1
+      - regex_2
+      - regex_3
+
+  - name: Module source from git without fixed hash
+    description: Module is sourced from git latest commit which makes your code mutable
+    solution: Source your modules from their latest version using ?ref=COMMITHASH ant the end of the git url
+    environment: non-prod
+    fatal: true
+    patterns:
+      - source\s*.*\.git"
+
+  - name: Yum mutable operations in production
+    description: yum operations that break instance immutability
+    solution: Avoid using yum update/install - Use fixed versions of your software, preferably rpms from artifactory
+    environment: prod
+    fatal: true
+    patterns:
+      - \s*yum\s*-y\s*update
+      - \s*yum\s*-y\s*install
+
+  - name: Private key commited in code
+    description: Private key inside code version control
+    solution: Remove it, rewrite git history and use Vault or AWS SSM Parameter store to secure your private keys
+    environment: non-prod
+    fatal: true
+    patterns:
+      - \s*(-----BEGIN PRIVATE KEY-----)
+      - \s*(-----BEGIN RSA PRIVATE KEY-----)
+      - \s*(-----BEGIN OPENSSH PRIVATE KEY-----)
+      - \s*(-----BEGIN PGP PRIVATE KEY BLOCK-----)
+
+  - name: Module source local / git
+    description: Module is sourced from local or git repo - only available on NON PROD environments
+    solution: Source your modules from their latest version on artifactory
+    environment: prod
+    fatal: true
+    patterns:
+      - \s*source\s*=\s*"\.\.
+
+  - name: Environment hardcoded ids on code or variables
+    description: Refrain from hardcoding resource ids per environment
+    solution: Capture them dynamically from data lookups or module outputs
+    environment: non-prod
+    fatal: true
+    patterns:
+      - (subnet_ids\s*=\s*\[\s*"\$\{v)
+      - (subnet_ids\s*=\s*\[\s*"[s])
+      - (subnet_ids\s*=\s*=\s*"\$\{v)
+      - (subnet_id\s*=\s*"\s*[s])
+      - (subnet_id\s*=\s*"\s*\$\{v)
+      - (subnets\s*=\s*\[\s*"\$\{v)
+      - (subnets\s*=\s*\[\s*"[s])
+      - (vpc_zone_identifier\s*=\s*\[\s*"\$\{v)
+      - (vpc_zone_identifier\s*=\s*\[\s*"[v])
+      - (vpc_zone_identifier\s*=\s*=\s*"\$\{v)
+      - (vpc_id\s*=\s*"\s*[v])
+      - (vpc_id\s*=\s*"\s*\$\{v)
+      - (aws_apps_ami\s*=\s*"\s*\$\{v)
+      - (aws_apps_ami\s*=\s*"\s*[a])
+      - (ami\s*=\s*"\s*\$\{v)
+      - (ami\s*=\s*"\s*[a])
+      - (image_id\s*=\s*"\s*\$\{v)
+      - (image_id\s*=\s*"\s*[a])
+      - (vpc_security_group_ids\s*=\s*\[\s*"\$\{v)
+      - (vpc_security_group_ids\s*=\s*\[\s*"[sg])
+      - (security_groups\s*=\s*\[\s*"\$\{v)
+      - (security_groups\s*=\s*\[\s*"[sg])
+      - ("subnet-)
+      - ("sg-)
+      - ("vpc-)
+
+  - name: Rules too permissive using 0.0.0.0
+    description: Detected wide range CIDR
+    solution: If possible and at maximum restrict the sg rules to your VPC CIDR range
+    environment: prod
+    fatal: true
+    patterns:
+      - ("0\.0\.0\.0)
+
+  - name: Unencrypted fs mounts
+    description: EFS / NTFS unencrypted mounts 
+    solution: Use stunnel / AWS EFS helper tools to mount your fs
+    environment: prod
+    fatal: true
+    patterns:
+      - (fs-.+:/)+.*(defaults)+
+      - ^.*(mount)+(-t)*(-o)*((?!tls).)*$
+

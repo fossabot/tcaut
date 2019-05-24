@@ -30,7 +30,7 @@ func init() {
 
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "rules.yaml", "config file (rules.yaml)")
-	rootCmd.PersistentFlags().StringVarP(&scanpath, "target", "t", "", "scanning target path")
+	rootCmd.PersistentFlags().StringVarP(&scanpath, "target", "t", ".", "scanning target path")
 	rootCmd.PersistentFlags().BoolP("detail", "d", false, "detailed output")
 
 }
@@ -49,6 +49,7 @@ func initConfig() {
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("| Using config file:", viper.ConfigFileUsed())
+		fmt.Println("|")
+		fmt.Println("| Loading policy file :", viper.ConfigFileUsed())
 	}
 }
